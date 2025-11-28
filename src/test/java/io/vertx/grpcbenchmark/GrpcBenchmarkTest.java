@@ -85,9 +85,13 @@ public class GrpcBenchmarkTest {
         
         vertx = Vertx.vertx();
         
+        // Max message size: 20MB is sufficient for our largest test (10MB payload)
+        // Using a reasonable limit rather than Integer.MAX_VALUE to avoid memory exhaustion
+        int maxMessageSize = 20 * 1024 * 1024; // 20MB
+        
         // Create gRPC server with increased max message size
         io.vertx.grpc.server.GrpcServerOptions grpcServerOptions = new io.vertx.grpc.server.GrpcServerOptions()
-                .setMaxMessageSize(Integer.MAX_VALUE); // Allow very large messages
+                .setMaxMessageSize(maxMessageSize);
         
         GrpcServer grpcServer = GrpcServer.server(vertx, grpcServerOptions);
         BenchmarkServiceImpl service = new BenchmarkServiceImpl();
@@ -110,7 +114,7 @@ public class GrpcBenchmarkTest {
                     
                     // Create gRPC client with increased max message size
                     io.vertx.grpc.client.GrpcClientOptions grpcClientOptions = new io.vertx.grpc.client.GrpcClientOptions()
-                            .setMaxMessageSize(Integer.MAX_VALUE);
+                            .setMaxMessageSize(maxMessageSize);
                     grpcClient = GrpcClient.client(vertx, grpcClientOptions);
                     benchmarkClient = new VertxBenchmarkServiceGrpcClient(
                             grpcClient, 
@@ -223,12 +227,12 @@ public class GrpcBenchmarkTest {
         LOG.info("Starting parallel upload benchmark...");
         long startTime = System.nanoTime();
         
-        @SuppressWarnings("unchecked")
-        Future<UploadBlobResponse>[] futures = requests.stream()
+        // Type-safe approach using List instead of array
+        List<Future<UploadBlobResponse>> futures = requests.stream()
                 .map(req -> benchmarkClient.uploadBlob(req))
-                .toArray(Future[]::new);
+                .toList();
         
-        Future.all(List.of(futures))
+        Future.all(futures)
                 .onSuccess(cf -> {
                     long endTime = System.nanoTime();
                     double seconds = (endTime - startTime) / 1_000_000_000.0;
@@ -243,8 +247,8 @@ public class GrpcBenchmarkTest {
                     LOG.info("");
                     
                     // Verify all succeeded
-                    for (int i = 0; i < fileCount; i++) {
-                        assertTrue(futures[i].result().getSuccess());
+                    for (Future<UploadBlobResponse> future : futures) {
+                        assertTrue(future.result().getSuccess());
                     }
                     
                     testContext.completeNow();

@@ -86,6 +86,9 @@ public class GrpcWindowSizeBenchmarkTest {
     // Max message size for gRPC (needs to accommodate our largest test)
     private static final int MAX_MESSAGE_SIZE = 20 * 1024 * 1024; // 20MB
     
+    // Default timeout for the entire benchmark suite (10 minutes)
+    private static final int DEFAULT_BENCHMARK_TIMEOUT_SECONDS = 600;
+    
     private static Vertx vertx;
     private static BenchmarkConfig config;
     
@@ -210,7 +213,7 @@ public class GrpcWindowSizeBenchmarkTest {
         chain.onSuccess(v -> testContext.completeNow())
              .onFailure(testContext::failNow);
         
-        assertTrue(testContext.awaitCompletion(600, TimeUnit.SECONDS));
+        assertTrue(testContext.awaitCompletion(DEFAULT_BENCHMARK_TIMEOUT_SECONDS, TimeUnit.SECONDS));
     }
     
     /**

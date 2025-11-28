@@ -138,12 +138,21 @@ public class BenchmarkConfig {
     
     /**
      * Parses a comma-separated list of integers from a string.
+     * 
+     * @param value Comma-separated list of integers (e.g., "65535,1048576")
+     * @return List of parsed integers
+     * @throws IllegalArgumentException if the string contains invalid integers
      */
     private static List<Integer> parseIntList(String value) {
         List<Integer> result = new ArrayList<>();
         if (value != null && !value.isEmpty()) {
             for (String part : value.split(",")) {
-                result.add(Integer.parseInt(part.trim()));
+                try {
+                    result.add(Integer.parseInt(part.trim()));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(
+                            "Invalid integer value '" + part.trim() + "' in configuration: " + value, e);
+                }
             }
         }
         return result;

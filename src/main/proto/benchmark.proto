@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.vertx.grpcbenchmark";
+option java_outer_classname = "BenchmarkProto";
+
+package benchmark;
+
+// A simple service for benchmarking gRPC performance with large payloads
+service BenchmarkService {
+  // Upload a blob of data - used to test throughput
+  rpc UploadBlob(UploadBlobRequest) returns (UploadBlobResponse);
+}
+
+// Request message for uploading a blob
+message UploadBlobRequest {
+  // Unique identifier for this upload
+  string upload_id = 1;
+  
+  // The binary content to upload
+  bytes content = 2;
+  
+  // Optional filename for logging purposes
+  string filename = 3;
+}
+
+// Response message for blob upload
+message UploadBlobResponse {
+  // Whether the upload was successful
+  bool success = 1;
+  
+  // The upload ID echoed back
+  string upload_id = 2;
+  
+  // Number of bytes received
+  int64 bytes_received = 3;
+  
+  // Optional message
+  string message = 4;
+}
